@@ -61,8 +61,7 @@ def preprocess(img):
     pruned_img = prune(img)
     closed_img = cv2.morphologyEx(pruned_img, cv2.MORPH_CLOSE, cv2.getStructuringElement(cv2.MORPH_ELLIPSE, (3,3)))
     opened_img = cv2.morphologyEx(closed_img, cv2.MORPH_OPEN, cv2.getStructuringElement(cv2.MORPH_ELLIPSE, (2,2)))
-    thinned_img = thin(opened_img)
-    return thinned_img
+    return opened_img
 
 def extract_ridge(input_img, kernel):
     img = input_img.copy()
@@ -130,6 +129,7 @@ if __name__ == "__main__":
     enhanced_and_binarized_img = enhance_and_binarize(img)
     preprocessed_img = preprocess(enhanced_and_binarized_img)
     thinned_img = thin(preprocessed_img)
+    # i, thinned_img = skeleton(preprocessed_img)
     terminations = extract_ridge(thinned_img, ridge_terminations_kernel)
     bifurcations = extract_ridge(thinned_img, ridge_bifurcations_kernel)
     fin_img, fin_list = postprocessing(terminations, bifurcations)
