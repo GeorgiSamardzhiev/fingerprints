@@ -7,7 +7,6 @@ from fingerprints_kernels import *
 
 def enhance_and_binarize(img): 
     enhanced_img = fingerprint_enhancer.enhance_Fingerprint(img)
-    _, binarized_img = cv2.threshold(img, 0, 255, cv2.THRESH_BINARY+cv2.THRESH_OTSU)
     _, binarized_enhanced_img = cv2.threshold(enhanced_img, 0, 255, cv2.THRESH_BINARY+cv2.THRESH_OTSU)
     return binarized_enhanced_img
 
@@ -55,7 +54,7 @@ def skeleton(input_img):
         subset = erode - opening
         result = cv2.bitwise_or(subset, result)
         img = erode.copy()
-    return i, result
+    return result
 
 def preprocess(img):
     pruned_img = prune(img)
@@ -70,29 +69,29 @@ def extract_ridge(input_img, kernel):
         result = cv2.bitwise_or(result, cv2.morphologyEx(img, cv2.MORPH_HITMISS, kernel[i]))
     return result  
 
-def manhattanDistance(x, y):
+def manhattan_distance(x, y):
     (x1,x2)=x
     (y1,y2)=y
     return abs(x1 - y1) + abs(x2 - y2)
 
-def euclideanDistance(x, y):
+def euclidean_distance(x, y):
     (x1,x2)=x
     (y1,y2)=y
     return math.sqrt((x1 - y1)**2 + (x2 - y2)** 2)
 
-def getMinutiaeList(minutiaeImg):
+def get_minutiae_list(minutiae_img):
     minutiae = []
-    (iMax, jMax) = minutiaeImg.shape
+    (iMax, jMax) = minutiae_img.shape
     for i in range(iMax):
         for j in range(jMax):
-            if minutiaeImg[i][j] != 0:
+            if minutiae_img[i][j] != 0:
                 minutiae.append((i,j))
     return minutiae
 
-def postprocessingMinutiaeListSameType(minutiaeList, tresh = 8, dist = manhattanDistance):
-    res = minutiaeList.copy()
-    for m1 in minutiaeList:
-        for m2 in minutiaeList:
+def postprocessing_minutiae_list_same_type(minutiae_list, tresh = 8, dist = manhattan_distance):
+    res = minutiae_list.copy()
+    for m1 in minutiae_list:
+        for m2 in minutiae_list:
             if m1 != m2 and dist(m1, m2) < tresh:
                 if m1 in res:
                     res.remove(m1)
@@ -100,7 +99,7 @@ def postprocessingMinutiaeListSameType(minutiaeList, tresh = 8, dist = manhattan
                     res.remove(m2)
     return res
 
-def postprocessingMinutiaeListDiffType(minutiaeList1, minutiaeList2, tresh = 8, dist = manhattanDistance):
+def postprocessing_minutiae_list_diff_type(minutiaeList1, minutiaeList2, tresh = 8, dist = manhattan_distance):
     res = minutiaeList1.copy()
     res = res + minutiaeList2
     for m1 in minutiaeList1:
@@ -112,12 +111,12 @@ def postprocessingMinutiaeListDiffType(minutiaeList1, minutiaeList2, tresh = 8, 
                     res.remove(m2)
     return res
 
-def postprocessing(terminations_img, bifurcations_img, tresh1 = 3, tresh2 = 3, tresh3 = 3, dist = manhattanDistance):
-    terminations_list = getMinutiaeList(terminations_img)
-    bifurcations_list = getMinutiaeList(bifurcations_img)
-    terminations_list = postprocessingMinutiaeListSameType(terminations_list, tresh1, dist)
-    bifurcations_list = postprocessingMinutiaeListSameType(bifurcations_list, tresh2, dist)
-    result_list = postprocessingMinutiaeListDiffType(terminations_list, bifurcations_list, tresh3, dist)
+def postprocessing(terminations_img, bifurcations_img, tresh1 = 4, tresh2 = 4, tresh3 = 4, dist = manhattan_distance):
+    terminations_list = get_minutiae_list(terminations_img)
+    bifurcations_list = get_minutiae_list(bifurcations_img)
+    terminations_list = postprocessing_minutiae_list_same_type(terminations_list, tresh1, dist)
+    bifurcations_list = postprocessing_minutiae_list_same_type(bifurcations_list, tresh2, dist)
+    result_list = postprocessing_minutiae_list_diff_type(terminations_list, bifurcations_list, tresh3, dist)
     iMax, jMax = terminations_img.shape
     result_img = np.zeros((iMax, jMax), dtype=np.uint8)
     for (i,j) in result_list:
@@ -125,11 +124,10 @@ def postprocessing(terminations_img, bifurcations_img, tresh1 = 3, tresh2 = 3, t
     return result_img, result_list
 
 if __name__ == "__main__":
-    img = cv2.imread('DB1_B/107_2.tif', cv2.IMREAD_GRAYSCALE)
+    img = cv2.imread('DB1_B/103_2.tif', cv2.IMREAD_GRAYSCALE)
     enhanced_and_binarized_img = enhance_and_binarize(img)
     preprocessed_img = preprocess(enhanced_and_binarized_img)
     thinned_img = thin(preprocessed_img)
-    # i, thinned_img = skeleton(preprocessed_img)
     terminations = extract_ridge(thinned_img, ridge_terminations_kernel)
     bifurcations = extract_ridge(thinned_img, ridge_bifurcations_kernel)
     fin_img, fin_list = postprocessing(terminations, bifurcations)
