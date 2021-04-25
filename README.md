@@ -4,31 +4,31 @@ This is research and implementation of a fingerprint minutiae extraction algorit
 The implementation follows [[1]](#1) in the most part, but it is adding my own original ideas in combination with some major ideas from [[2]](#2) and [[3]](#3). The image data is taken from [[4]](#4).
 
 ## Algorithm
-1. Take a raw image of a fingerprint
+1. **Take a raw image of a fingerprint**
 
     In this case they are directly taken from [[4]](#4)
 
-2. Enhance and binarize the raw image
+2. **Enhance and binarize the raw image**
 
     Implementation of this is object of future work and research. For now the library **fingerprint-enhancer** is used for that. More information of the enhancement algorithm can be obtained from [[2]](#2) 
 
-3. Morphological preprocessing
+3. **Morphological preprocessing**
 
     The preprocessing consists of three steps
     1. Spur removal -> done with pruning
     2. Hole removal -> done with morphological opening
     3. Islands removal -> done with morphological closing
 
-4. Thinning
+4. **Thinning**
 
     Morphological thinning with Hit&Miss transform. Skeletonization with opening would leave many line breaks and false minutiae, so Hit&Miss thinning is preferred.
 
-5. Minutiae extraction
+5. **Minutiae extraction**
 
     For terminations and bifurcations we use use different set of kernels.
     Apply Hit&Miss with the corresponding kernels for extract the minutiae.
 
-6. Morphological post-processing
+6. **Morphological post-processing**
 
     The previous steps may leave some false minutiae. This is why we need to get rid of them. Using three terminations. T1 - remove terminations which have distance between them less than T1. T2 - remove bifurcations that have distance between them less than T2. T3 - remove termination and bifurcations that have distance between them less than T3.
 
